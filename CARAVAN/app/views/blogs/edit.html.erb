@@ -1,2 +1,10 @@
-<h1>Blogs#edit</h1>
-<p>Find me in app/views/blogs/edit.html.erb</p>
+<h1>編集画面</h1>
+<%= form_for(@blog) do |f| %>
+	<h4>タイトル</h4>
+	<%= f.text_field :title %>
+	<h4>カテゴリー</h4>
+	<%= f.text_field :category %>
+	<h4>本文</h4>
+	<%= f.text_area :body %>
+	<%= f.submit '保存' %>
+<% end %>
