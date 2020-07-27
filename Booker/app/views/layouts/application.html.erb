@@ -10,6 +10,33 @@
   </head>
 
   <body>
+    <header class="navbar navbar-fixed-top navbar-inverse">
+      <div class="container">
+        <nav class="navbar-left">
+          <span>Bookers</span>
+        </nav>
+        <nav>
+          <ul class="nav navbar-right">
+            <% if user_signed_in? %>
+              <li><%= link_to "Home", "#" %></li>
+              <li><%= link_to "Users", "#" %></li>
+              <li><%= link_to "Books", "#" %></li>
+              <li><%= link_to "logout", destroy_user_session_path, method: :delete %></li>
+            <% else %>
+              <li><%= link_to " Home", root_path, class:"glyphicon glyphicon-home" %></li>
+              <li><%= link_to " About", "/home/about", class:"glyphicon glyphicon-link" %></li>
+              <li><%= link_to " Sign up", new_user_registration_path, class:"glyphicon glyphicon-edit" %></li>
+              <li><%= link_to " login", new_user_session_path, class:"glyphicon glyphicon-log-in" %></li>
+            <% end %>
+          </ul>
+        </nav>
+      </div>
+    </header>
     <%= yield %>
+  <footer>
+    <div class="col-xs-3 col-xs-offset-9">
+      <p>CopyRight Infratop.inc</p>
+    </div>
+  </footer>
   </body>
 </html>
