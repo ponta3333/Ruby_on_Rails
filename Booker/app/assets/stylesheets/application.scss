@@ -61,3 +61,23 @@ header {
 label {
 	display: block;
 }
+th {
+	text-align: left;
+}
+.userinfo {
+	border-top: 1px solid #ddd;
+}
+tr {
+	vertical-align: top;
+}
+.table {
+	width: 100%;
+    max-width: 100%;
+    margin-bottom: 20px;
+    }
+.col-xs-12 {
+	width: 100%;
+}
+.field {
+	margin-bottom: 10px;
+}

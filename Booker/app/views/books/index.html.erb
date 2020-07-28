@@ -35,14 +35,3 @@
 
     </div>
 <% end %>
-<%= form_for (@book) do |f| %>
-	<div class="field">
-			<label>Title</label>
-			<%= f.text_field :title %>
-	</div>
-    <div class="field">
-			<label>Body</label>
-			<%= f.text_area :body %>
-	</div>
-	<%= f.submit 'Create Book' %>
-<% end %>
