@@ -3,7 +3,7 @@ class User < ApplicationRecord
   # :confirmable, :lockable, :timeoutable, :trackable and :omniauthable
   
   validates :introduction, length: {maximum: 50}
-  validates :name, length: {minimum: 2}, length: {maximum: 20}
+  validates :name, length: {minimum: 2, maximum: 20}, presence: true
 
 
   devise :database_authenticatable, :registerable,

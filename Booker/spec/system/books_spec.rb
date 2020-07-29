@@ -1,166 +1,155 @@
 require 'rails_helper'
 
 describe '投稿のテスト' do
-  let!(:book) { create(:book,title:'hoge',body:'body') }
-  describe 'トップ画面(root_path)のテスト' do
-    before do 
-      visit root_path
-    end
-    context '表示の確認' do
-      it 'トップ画面(root_path)に一覧ページへのリンクが表示されているか' do
-        expect(page).to have_link "", href: books_path
-      end
-      it 'root_pathが"/"であるか' do
-        expect(current_path).to eq('/')
-      end
-    end
+  let(:user) { create(:user) }
+  let!(:user2) { create(:user) }
+  let!(:book) { create(:book, user: user) }
+  let!(:book2) { create(:book, user: user2) }
+  before do
+  	visit new_user_session_path
+  	fill_in 'user[name]', with: user.name
+  	fill_in 'user[password]', with: user.password
+  	click_button 'Log in'
   end
-  describe "一覧画面のテスト" do
-    before do
-      visit books_path
-    end
-    context '一覧の表示とリンクの確認' do
-      it "bookの一覧表示(tableタグ)と投稿フォームが同一画面に表示されているか" do
-        expect(page).to have_selector 'table'
-        expect(page).to have_field 'book[title]'
-        expect(page).to have_field 'book[body]'
-      end
-      it "bookのタイトルと感想を表示し、詳細・編集・削除のリンクが表示されているか" do
-          (1..5).each do |i|
-            Book.create(title:'hoge'+i.to_s,body:'body'+i.to_s)
-          end
-          visit books_path
-          Book.all.each_with_index do |book,i|
-            j = i * 3
-            expect(page).to have_content book.title
-            expect(page).to have_content book.body
-            # Showリンク
-            show_link = find_all('a')[j]
-            expect(show_link.native.inner_text).to match(/show/i)
-            expect(show_link[:href]).to eq book_path(book)
-            # Editリンク
-            show_link = find_all('a')[j+1]
-            expect(show_link.native.inner_text).to match(/edit/i)
-            expect(show_link[:href]).to eq edit_book_path(book)
-            # Destroyリンク
-            show_link = find_all('a')[j+2]
-            expect(show_link.native.inner_text).to match(/destroy/i)
-            expect(show_link[:href]).to eq book_path(book)
-          end
-      end
-      it 'Create Bookボタンが表示される' do
-        expect(page).to have_button 'Create Book'
-      end
-    end
-    context '投稿処理に関するテスト' do
-      it '投稿に成功しサクセスメッセージが表示されるか' do
-        fill_in 'book[title]', with: Faker::Lorem.characters(number:5)
-        fill_in 'book[body]', with: Faker::Lorem.characters(number:20)
-        click_button 'Create Book'
-        expect(page).to have_content 'successfully'
-      end
-      it '投稿に失敗する' do
-        click_button 'Create Book'
-        expect(page).to have_content 'error'
-        expect(current_path).to eq('/books')
-      end
-      it '投稿後のリダイレクト先は正しいか' do
-        fill_in 'book[title]', with: Faker::Lorem.characters(number:5)
-        fill_in 'book[body]', with: Faker::Lorem.characters(number:20)
-        click_button 'Create Book'
-        expect(page).to have_current_path book_path(Book.last)
-      end
-    end
-    context 'book削除のテスト' do
-      it 'bookの削除' do
-        expect{ book.destroy }.to change{ Book.count }.by(-1)
-        # ※本来はダイアログのテストまで行うがココではデータが削除されることだけをテスト
-      end
-    end
+  describe 'サイドバーのテスト' do
+		context '表示の確認' do
+		  it 'New bookと表示される' do
+	    	expect(page).to have_content 'New book'
+		  end
+		  it 'titleフォームが表示される' do
+		  	expect(page).to have_field 'book[title]'
+		  end
+		  it 'opinionフォームが表示される' do
+		  	expect(page).to have_field 'book[body]'
+		  end
+		  it 'Create Bookボタンが表示される' do
+		  	expect(page).to have_button 'Create Book'
+		  end
+		  it '投稿に成功する' do
+		  	fill_in 'book[title]', with: Faker::Lorem.characters(number:5)
+		  	fill_in 'book[body]', with: Faker::Lorem.characters(number:20)
+		  	click_button 'Create Book'
+		  	expect(page).to have_content 'successfully'
+		  end
+		  it '投稿に失敗する' do
+		  	click_button 'Create Book'
+		  	expect(page).to have_content 'error'
+		  	expect(current_path).to eq('/books')
+		  end
+		end
   end
-  describe '詳細画面のテスト' do
-    before do
-      visit book_path(book)
-    end
-    context '表示の確認' do
-      it '本のタイトルと感想が画面に表示されていること' do
-        expect(page).to have_content book.title
-        expect(page).to have_content book.body
-      end
-      it 'Editリンクが表示される' do
-        edit_link = find_all('a')[0]
-        expect(edit_link.native.inner_text).to match(/edit/i)
+
+  describe '編集のテスト' do
+  	context '自分の投稿の編集画面への遷移' do
+  	  it '遷移できる' do
+	  		visit edit_book_path(book)
+	  		expect(current_path).to eq('/books/' + book.id.to_s + '/edit')
+	  	end
+	  end
+		context '他人の投稿の編集画面への遷移' do
+		  it '遷移できない' do
+		    visit edit_book_path(book2)
+		    expect(current_path).to eq('/books')
+		  end
+		end
+		context '表示の確認' do
+			before do
+				visit edit_book_path(book)
 			end
-      it 'Backリンクが表示される' do
-        back_link = find_all('a')[1]
-        expect(back_link.native.inner_text).to match(/back/i)
-			end  
-    end
-    context 'リンクの遷移先の確認' do
-      it 'Editの遷移先は編集画面か' do
-        edit_link = find_all('a')[0]
-        edit_link.click
-        expect(current_path).to eq('/books/' + book.id.to_s + '/edit')
-      end
-      it 'Backの遷移先は一覧画面か' do
-        back_link = find_all('a')[1]
-        back_link.click
-        expect(page).to have_current_path books_path
-      end
-    end
+			it 'Editing Bookと表示される' do
+				expect(page).to have_content('Editing Book')
+			end
+			it 'title編集フォームが表示される' do
+				expect(page).to have_field 'book[title]', with: book.title
+			end
+			it 'opinion編集フォームが表示される' do
+				expect(page).to have_field 'book[body]', with: book.body
+			end
+			it 'Showリンクが表示される' do
+				expect(page).to have_link 'Show', href: book_path(book)
+			end
+			it 'Backリンクが表示される' do
+				expect(page).to have_link 'Back', href: books_path
+			end
+		end
+		context 'フォームの確認' do
+			it '編集に成功する' do
+				visit edit_book_path(book)
+				click_button 'Update Book'
+				expect(page).to have_content 'successfully'
+				expect(current_path).to eq '/books/' + book.id.to_s
+			end
+			it '編集に失敗する' do
+				visit edit_book_path(book)
+				fill_in 'book[title]', with: ''
+				click_button 'Update Book'
+				expect(page).to have_content 'error'
+				expect(current_path).to eq '/books/' + book.id.to_s
+			end
+		end
+	end
+
+  describe '一覧画面のテスト' do
+  	before do
+  		visit books_path
+  	end
+  	context '表示の確認' do
+  		it 'Booksと表示される' do
+  			expect(page).to have_content 'Books'
+  		end
+  		it '自分と他人の画像のリンク先が正しい' do
+  			expect(page).to have_link '', href: user_path(book.user)
+  			expect(page).to have_link '', href: user_path(book2.user)
+  		end
+  		it '自分と他人のタイトルのリンク先が正しい' do
+  			expect(page).to have_link book.title, href: book_path(book)
+  			expect(page).to have_link book2.title, href: book_path(book2)
+  		end
+  		it '自分と他人のオピニオンが表示される' do
+  			expect(page).to have_content book.body
+  			expect(page).to have_content book2.body
+  		end
+  	end
   end
-  describe '編集画面のテスト' do
-    before do
-      visit edit_book_path(book)
-    end
-    context '表示の確認' do
-      it '編集前のタイトルと感想がフォームに表示(セット)されている' do
-        expect(page).to have_field 'book[title]', with: book.title
-        expect(page).to have_field 'book[body]', with: book.body
-      end
-      it 'Update Bookボタンが表示される' do
-        expect(page).to have_button 'Update Book'
-      end
-      it 'Showリンクが表示される' do
-        show_link = find_all('a')[0]
-        expect(show_link.native.inner_text).to match(/show/i)
-			end  
-      it 'Backリンクが表示される' do
-        back_link = find_all('a')[1]
-        expect(back_link.native.inner_text).to match(/back/i)
-			end  
-    end
-    context 'リンクの遷移先の確認' do
-      it 'Showの遷移先は詳細画面か' do
-        show_link = find_all('a')[0]
-        show_link.click
-        expect(current_path).to eq('/books/' + book.id.to_s)
-      end
-      it 'Backの遷移先は一覧画面か' do
-        back_link = find_all('a')[1]
-        back_link.click
-        expect(page).to have_current_path books_path
-      end
-    end
-    context '更新処理に関するテスト' do
-      it '更新に成功しサクセスメッセージが表示されるか' do
-        fill_in 'book[title]', with: Faker::Lorem.characters(number:5)
-        fill_in 'book[body]', with: Faker::Lorem.characters(number:20)
-        click_button 'Update Book'
-        expect(page).to have_content 'successfully'
-      end
-      it '更新に失敗しエラーメッセージが表示されるか' do
-        fill_in 'book[title]', with: ""
-        fill_in 'book[body]', with: ""
-        click_button 'Update Book'
-        expect(page).to have_content 'error'
-      end
-      it '更新後のリダイレクト先は正しいか' do
-        fill_in 'book[title]', with: Faker::Lorem.characters(number:5)
-        fill_in 'book[body]', with: Faker::Lorem.characters(number:20)
-        click_button 'Update Book'
-        expect(page).to have_current_path book_path(book)
-      end
-    end
+
+  describe '詳細画面のテスト' do
+  	context '自分・他人共通の投稿詳細画面の表示を確認' do
+  		it 'Book detailと表示される' do
+  			visit book_path(book)
+  			expect(page).to have_content 'Book detail'
+  		end
+  		it 'ユーザー画像・名前のリンク先が正しい' do
+  			visit book_path(book)
+  			expect(page).to have_link book.user.name, href: user_path(book.user)
+  		end
+  		it '投稿のtitleが表示される' do
+  			visit book_path(book)
+  			expect(page).to have_content book.title
+  		end
+  		it '投稿のopinionが表示される' do
+  			visit book_path(book)
+  			expect(page).to have_content book.body
+  		end
+  	end
+  	context '自分の投稿詳細画面の表示を確認' do
+  		it '投稿の編集リンクが表示される' do
+  			visit book_path book
+  			expect(page).to have_link 'Edit', href: edit_book_path(book)
+  		end
+  		it '投稿の削除リンクが表示される' do
+  			visit book_path book
+  			expect(page).to have_link 'Destroy', href: book_path(book)
+  		end
+  	end
+  	context '他人の投稿詳細画面の表示を確認' do
+  		it '投稿の編集リンクが表示されない' do
+  			visit book_path(book2)
+  			expect(page).to have_no_link 'Edit', href: edit_book_path(book2)
+  		end
+  		it '投稿の削除リンクが表示されない' do
+  			visit book_path(book2)
+  			expect(page).to have_no_link 'Destroy', href: book_path(book2)
+  		end
+  	end
   end
 end
