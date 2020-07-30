@@ -4,7 +4,7 @@ before_action :login_user
 
   def top
   end
-  
+
   def about
   end
 
@@ -15,4 +15,5 @@ private
 		redirect_to user_path(current_user)
 	end
   end
+  
 end
